@@ -1,11 +1,15 @@
 const User = require('../models/User')
+const bcrypt = require('bcryptjs');
 
 const userController ={
     register: async function(req, res){
+        const selectedUser = await User.findOne({email:req.body.email});
+        if(selectedUser) return res.status(400).send("Usuário já existe");
+
         const user = new User({
             name:req.body.name,
             email:req.body.email,
-            password: req.body.password
+            password: bcrypt.hashSync(req.body.password)
         });
         try{
             const savedUser = await user.save();
@@ -16,10 +20,26 @@ const userController ={
         
     },
 
-    
-    login: function(req, res){
-        console.log('login');
-        res.send('login');
+
+    login: async function(req, res){
+        const userName = req.body.email;
+        const userPassword = req.body.password;
+        const selectedUser = await User.findOne({email:req.body.email});
+        if(selectedUser){
+         
+            if(bcrypt.compareSync(userPassword,selectedUser.password)){
+                res.send("Usuário Logado");
+            }else{
+                res.send("Email ou Senha incorretos");
+            }
+        }else{
+            res.status(400).send("Email ou Senha incorretos");
+        }
+        
+        
+        
+
+
     }
 }
 
